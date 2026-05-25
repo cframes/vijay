@@ -1,131 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
 
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+<meta
+  name="viewport"
+  content="width=device-width,
+  initial-scale=1.0,
+  maximum-scale=1.0,
+  user-scalable=no"
+/>
 
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-    }
-  </style>
+<title>AR Frame</title>
+
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+<style>
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: black;
+  font-family: sans-serif;
+}
+
+/* START SCREEN */
+#startScreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+#startBtn {
+  border: none;
+  padding: 16px 26px;
+  border-radius: 14px;
+  font-size: 18px;
+  cursor: pointer;
+}
+</style>
 </head>
 
 <body>
-  <a-scene
-    mindar-image="
-      imageTargetSrc: targets.mind;
-      filterMinCF: 0.01;
-      filterBeta: 0.05;
-      missTolerance: 8;
-      warmupTolerance: 8;
-    "
-    renderer="
-      colorManagement: true;
-      physicallyCorrectLights: true;
-      precision: mediump;
-    "
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-  >
 
-    <a-assets>
-      <video
-        id="vid"
-        src="video.mp4"
-        preload="auto"
-        muted
-        loop
-        playsinline
-        webkit-playsinline
-        crossorigin="anonymous"
-      ></video>
-    </a-assets>
+<!-- AUDIO UNLOCK SCREEN -->
+<div id="startScreen">
+  <button id="startBtn">
+    Tap To Start AR
+  </button>
+</div>
 
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false"
-    ></a-camera>
+<a-scene
+  mindar-image="
+    imageTargetSrc: targets.mind;
 
-    <!-- TRACK TARGET -->
-    <a-entity
-      id="target"
-      mindar-image-target="targetIndex: 0"
-      smooth="true"
-    >
+    autoStart: true;
+    uiScanning: false;
+    uiLoading: false;
+    uiError: false;
 
-      <!-- VIDEO -->
-      <a-video
-        id="videoPlane"
-        src="#vid"
-        position="0 0 0"
-        material="shader: flat;"
-      ></a-video>
+    filterMinCF: 0.008;
+    filterBeta: 0.015;
 
-    </a-entity>
+    warmupTolerance: 12;
+    missTolerance: 10;
+  "
 
-  </a-scene>
+  embedded
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
+  renderer="
+    antialias: true;
+    alpha: true;
+    precision: high;
+    physicallyCorrectLights: true;
+    colorManagement: true;
+  "
 
-      const video = document.querySelector("#vid");
-      const target = document.querySelector("#target");
-      const videoPlane = document.querySelector("#videoPlane");
+  color-space="sRGB"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+>
 
-      // Smooth autoplay
-      video.muted = true;
-      video.playsInline = true;
+<a-assets>
 
-      // Auto fit any video inside frame
-      video.addEventListener("loadedmetadata", () => {
+<video
+  id="vid"
+  src="video.mp4"
+  preload="auto"
+  crossorigin="anonymous"
+  playsinline
+  webkit-playsinline
+  loop
+></video>
 
-        const aspectRatio =
-          video.videoWidth / video.videoHeight;
+</a-assets>
 
-        const frameWidth = 1; // frame width
-        const frameHeight = 1; // frame height
+<a-camera
+  position="0 0 0"
+  look-controls="enabled: false"
+></a-camera>
 
-        let width, height;
+<a-entity
+  id="target"
+  mindar-image-target="targetIndex: 0"
+>
 
-        // Fit video inside square frame
-        if (aspectRatio > 1) {
-          width = frameWidth;
-          height = frameWidth / aspectRatio;
-        } else {
-          height = frameHeight;
-          width = frameHeight * aspectRatio;
-        }
+<a-video
+  id="videoPlane"
+  src="#vid"
+  position="0 0 0"
+  material="shader: flat;"
+></a-video>
 
-        videoPlane.setAttribute(
-          "geometry",
-          {
-            primitive: "plane",
-            width: width,
-            height: height
-          }
-        );
-      });
+</a-entity>
 
-      // Target found
-      target.addEventListener("targetFound", () => {
-        video.play();
-      });
+</a-scene>
 
-      // Target lost
-      target.addEventListener("targetLost", () => {
-        video.pause();
-      });
+<script>
+document.addEventListener("DOMContentLoaded", () => {
 
-      // iPhone interaction fix
-      document.body.addEventListener("click", () => {
-        video.play();
-      });
+const video =
+document.getElementById("vid");
 
-    });
-  </script>
+const target =
+document.getElementById("target");
+
+const plane =
+document.getElementById("videoPlane");
+
+const startBtn =
+document.getElementById("startBtn");
+
+const startScreen =
+document.getElementById("startScreen");
+
+let audioReady = false;
+
+// --------------------
+// AUTO FIT VIDEO
+// --------------------
+video.addEventListener(
+"loadedmetadata",
+() => {
+
+const vw = video.videoWidth;
+const vh = video.videoHeight;
+
+const aspect = vw / vh;
+
+const frameWidth = 1;
+const frameHeight = 1.45;
+
+let width;
+let height;
+
+// FULL COVER FIT
+if (
+aspect >
+frameWidth / frameHeight
+) {
+height = frameHeight;
+width = height * aspect;
+} else {
+width = frameWidth;
+height = width / aspect;
+}
+
+plane.setAttribute(
+"width",
+width
+);
+
+plane.setAttribute(
+"height",
+height
+);
+
+});
+
+// --------------------
+// START BUTTON
+// --------------------
+startBtn.addEventListener(
+"click",
+async () => {
+
+try {
+
+video.muted = false;
+video.volume = 1;
+
+await video.play();
+video.pause();
+
+audioReady = true;
+
+startScreen.style.display =
+"none";
+
+} catch (err) {
+console.log(err);
+}
+
+});
+
+// --------------------
+// TARGET FOUND
+// --------------------
+target.addEventListener(
+"targetFound",
+async () => {
+
+if (!audioReady) return;
+
+try {
+await video.play();
+} catch (err) {
+console.log(err);
+}
+
+});
+
+// --------------------
+// TARGET LOST
+// --------------------
+target.addEventListener(
+"targetLost",
+() => {
+
+video.pause();
+
+});
+
+});
+</script>
+
 </body>
 </html>
