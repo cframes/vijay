@@ -1,23 +1,131 @@
+<!DOCTYPE html>
 <html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-  </head>
-  <body>
-    <a-scene mindar-image="imageTargetSrc: targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-assets>
-        <video id="vid" src="video.mp4" loop crossorigin="anonymous" playsinline></video>
-      </a-assets>
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-video src="#vid" width="1" height="1.5" position="0 0 0"></a-video>
-      </a-entity>
-    </a-scene>
-    <script>
-      document.addEventListener("click", function () {
-        document.querySelector("#vid").play();
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <a-scene
+    mindar-image="
+      imageTargetSrc: targets.mind;
+      filterMinCF: 0.01;
+      filterBeta: 0.05;
+      missTolerance: 8;
+      warmupTolerance: 8;
+    "
+    renderer="
+      colorManagement: true;
+      physicallyCorrectLights: true;
+      precision: mediump;
+    "
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+  >
+
+    <a-assets>
+      <video
+        id="vid"
+        src="video.mp4"
+        preload="auto"
+        muted
+        loop
+        playsinline
+        webkit-playsinline
+        crossorigin="anonymous"
+      ></video>
+    </a-assets>
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+    ></a-camera>
+
+    <!-- TRACK TARGET -->
+    <a-entity
+      id="target"
+      mindar-image-target="targetIndex: 0"
+      smooth="true"
+    >
+
+      <!-- VIDEO -->
+      <a-video
+        id="videoPlane"
+        src="#vid"
+        position="0 0 0"
+        material="shader: flat;"
+      ></a-video>
+
+    </a-entity>
+
+  </a-scene>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      const video = document.querySelector("#vid");
+      const target = document.querySelector("#target");
+      const videoPlane = document.querySelector("#videoPlane");
+
+      // Smooth autoplay
+      video.muted = true;
+      video.playsInline = true;
+
+      // Auto fit any video inside frame
+      video.addEventListener("loadedmetadata", () => {
+
+        const aspectRatio =
+          video.videoWidth / video.videoHeight;
+
+        const frameWidth = 1; // frame width
+        const frameHeight = 1; // frame height
+
+        let width, height;
+
+        // Fit video inside square frame
+        if (aspectRatio > 1) {
+          width = frameWidth;
+          height = frameWidth / aspectRatio;
+        } else {
+          height = frameHeight;
+          width = frameHeight * aspectRatio;
+        }
+
+        videoPlane.setAttribute(
+          "geometry",
+          {
+            primitive: "plane",
+            width: width,
+            height: height
+          }
+        );
       });
-    </script>
-  </body>
+
+      // Target found
+      target.addEventListener("targetFound", () => {
+        video.play();
+      });
+
+      // Target lost
+      target.addEventListener("targetLost", () => {
+        video.pause();
+      });
+
+      // iPhone interaction fix
+      document.body.addEventListener("click", () => {
+        video.play();
+      });
+
+    });
+  </script>
+</body>
 </html>
