@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 
 <meta
   name="viewport"
@@ -11,37 +11,34 @@
   user-scalable=no"
 />
 
-<title>AR Frame</title>
+<title>Professional AR Video</title>
 
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
 <style>
-html,
-body {
+html, body {
   margin: 0;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: black;
-  font-family: sans-serif;
 }
 
-/* START SCREEN */
+/* Audio Unlock Screen */
 #startScreen {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.95);
   display: flex;
   justify-content: center;
   align-items: center;
+  background: rgba(0,0,0,.4);
   z-index: 9999;
 }
 
 #startBtn {
   border: none;
-  padding: 16px 26px;
   border-radius: 14px;
+  padding: 14px 24px;
   font-size: 18px;
   cursor: pointer;
 }
@@ -50,7 +47,7 @@ body {
 
 <body>
 
-<!-- AUDIO UNLOCK SCREEN -->
+<!-- Start Button -->
 <div id="startScreen">
   <button id="startBtn">
     Tap To Start AR
@@ -58,34 +55,34 @@ body {
 </div>
 
 <a-scene
-  mindar-image="
-    imageTargetSrc: targets.mind;
 
-    autoStart: true;
-    uiScanning: false;
-    uiLoading: false;
-    uiError: false;
+mindar-image="
+  imageTargetSrc: targets.mind;
 
-    filterMinCF: 0.008;
-    filterBeta: 0.015;
+  autoStart: true;
+  uiScanning: false;
+  uiLoading: false;
+  uiError: false;
 
-    warmupTolerance: 12;
-    missTolerance: 10;
-  "
+  filterMinCF: 0.008;
+  filterBeta: 0.015;
 
-  embedded
+  warmupTolerance: 12;
+  missTolerance: 10;
+"
 
-  renderer="
-    antialias: true;
-    alpha: true;
-    precision: high;
-    physicallyCorrectLights: true;
-    colorManagement: true;
-  "
+renderer="
+  antialias: true;
+  alpha: true;
+  precision: high;
+  physicallyCorrectLights: true;
+  colorManagement: true;
+"
 
-  color-space="sRGB"
-  vr-mode-ui="enabled: false"
-  device-orientation-permission-ui="enabled: false"
+color-space="sRGB"
+vr-mode-ui="enabled: false"
+device-orientation-permission-ui="enabled: false"
+
 >
 
 <a-assets>
@@ -124,7 +121,9 @@ body {
 </a-scene>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(
+"DOMContentLoaded",
+() => {
 
 const video =
 document.getElementById("vid");
@@ -143,17 +142,16 @@ document.getElementById("startScreen");
 
 let audioReady = false;
 
-// --------------------
+// -------------------
 // AUTO FIT VIDEO
-// --------------------
+// -------------------
 video.addEventListener(
 "loadedmetadata",
 () => {
 
-const vw = video.videoWidth;
-const vh = video.videoHeight;
-
-const aspect = vw / vh;
+const aspect =
+video.videoWidth /
+video.videoHeight;
 
 const frameWidth = 1;
 const frameHeight = 1.45;
@@ -161,16 +159,28 @@ const frameHeight = 1.45;
 let width;
 let height;
 
-// FULL COVER FIT
+// FULL FRAME COVER
 if (
 aspect >
-frameWidth / frameHeight
+frameWidth /
+frameHeight
 ) {
-height = frameHeight;
-width = height * aspect;
+
+height =
+frameHeight;
+
+width =
+height *
+aspect;
+
 } else {
-width = frameWidth;
-height = width / aspect;
+
+width =
+frameWidth;
+
+height =
+width /
+aspect;
 }
 
 plane.setAttribute(
@@ -185,9 +195,9 @@ height
 
 });
 
-// --------------------
-// START BUTTON
-// --------------------
+// -------------------
+// AUDIO UNLOCK
+// -------------------
 startBtn.addEventListener(
 "click",
 async () => {
@@ -205,15 +215,15 @@ audioReady = true;
 startScreen.style.display =
 "none";
 
-} catch (err) {
+} catch(err) {
 console.log(err);
 }
 
 });
 
-// --------------------
+// -------------------
 // TARGET FOUND
-// --------------------
+// -------------------
 target.addEventListener(
 "targetFound",
 async () => {
@@ -222,15 +232,15 @@ if (!audioReady) return;
 
 try {
 await video.play();
-} catch (err) {
+} catch(err) {
 console.log(err);
 }
 
 });
 
-// --------------------
+// -------------------
 // TARGET LOST
-// --------------------
+// -------------------
 target.addEventListener(
 "targetLost",
 () => {
