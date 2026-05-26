@@ -1,177 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-
-<meta
-  name="viewport"
-  content="width=device-width,
-  initial-scale=1.0,
-  maximum-scale=1.0,
-  user-scalable=no"
-/>
-
-<title>cframes AR Experience</title>
-
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-
-<style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-}
-
-html,body{
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  touch-action:none;
-  font-family:Arial,sans-serif;
-}
-
-/* Intro Screen */
-#startScreen{
-  position:fixed;
-  inset:0;
-  background:linear-gradient(
-    to bottom,
-    #ffffff,
-    #f5f5f5
-  );
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-}
-
-/* Container */
-.intro-container{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  width:90%;
-}
-
-/* Logo */
-.logo{
-  width:80%;
-  max-width:420px;
-  object-fit:contain;
-  margin-bottom:40px;
-}
-
-/* Button */
-#startBtn{
-  border:none;
-  outline:none;
-  background:#111;
-  color:#fff;
-  padding:16px 30px;
-  border-radius:18px;
-  font-size:18px;
-  font-weight:600;
-  cursor:pointer;
-  transition:.2s ease;
-}
-
-#startBtn:active{
-  transform:scale(.96);
-}
-</style>
-</head>
-
-<body>
-
-<!-- Intro Screen -->
-<div id="startScreen">
-
-  <div class="intro-container">
-
-    <!-- Logo -->
-    <img
-      src="logo.png"
-      alt="cframes"
-      class="logo"
-    />
-
-    <!-- Button -->
-    <button id="startBtn">
-      Start AR Experience
-    </button>
-
-  </div>
-
-</div>
-
-<!-- AR Scene -->
-<a-scene
-
-mindar-image="
-imageTargetSrc: targets.mind;
-
-autoStart:true;
-uiScanning:false;
-uiLoading:false;
-uiError:false;
-
-/* Smooth tracking */
-filterMinCF:0.0005;
-filterBeta:0.001;
-
-warmupTolerance:20;
-missTolerance:5;
+material="
+shader:flat;
+transparent:true;
 "
 
-renderer="
-antialias:true;
-alpha:true;
-precision:high;
-physicallyCorrectLights:true;
-colorManagement:true;
-"
-
-color-space="sRGB"
-vr-mode-ui="enabled:false"
-device-orientation-permission-ui="enabled:false"
->
-
-<!-- Assets -->
-<a-assets timeout="10000">
-
-<video
-id="vid"
-src="video.mp4"
-preload="auto"
-crossorigin="anonymous"
-playsinline
-webkit-playsinline
-loop
-></video>
-
-</a-assets>
-
-<!-- Camera -->
-<a-camera
-position="0 0 0"
-look-controls="enabled:false"
-></a-camera>
-
-<!-- AR Target -->
-<a-entity
-id="target"
-mindar-image-target="targetIndex:0"
->
-
-<!-- Video -->
-<a-video
-id="videoPlane"
-src="#vid"
-position="0 0 0"
-width="1"
-height="1"
-material="shader:flat;"
 ></a-video>
 
 </a-entity>
@@ -179,12 +10,23 @@ material="shader:flat;"
 </a-scene>
 
 <script>
+
 document.addEventListener(
 "DOMContentLoaded",
 () => {
 
-const video =
-document.getElementById("vid");
+/* =========================
+ELEMENTS
+========================= */
+
+const startBtn =
+document.getElementById("startBtn");
+
+const introScreen =
+document.getElementById("introScreen");
+
+const arVideo =
+document.getElementById("arVideo");
 
 const target =
 document.getElementById("target");
@@ -192,24 +34,24 @@ document.getElementById("target");
 const plane =
 document.getElementById("videoPlane");
 
-const startBtn =
-document.getElementById("startBtn");
-
-const startScreen =
-document.getElementById("startScreen");
+/* =========================
+STATES
+========================= */
 
 let audioReady = false;
+let isPlaying = false;
 
-// --------------------
-// AUTO FIT VIDEO
-// --------------------
-video.addEventListener(
+/* =========================
+AUTO FIT VIDEO
+========================= */
+
+arVideo.addEventListener(
 "loadedmetadata",
 () => {
 
 const aspect =
-video.videoWidth /
-video.videoHeight;
+arVideo.videoWidth /
+arVideo.videoHeight;
 
 const frameWidth = 1;
 const frameHeight = 1;
@@ -217,28 +59,24 @@ const frameHeight = 1;
 let width;
 let height;
 
-// Cover Fit
-if (
+if(
 aspect >
 frameWidth /
 frameHeight
 ){
 
-height =
-frameHeight;
+height = frameHeight;
 
 width =
-height *
-aspect;
+height * aspect;
 
 }else{
 
-width =
-frameWidth;
+width = frameWidth;
 
 height =
-width /
-aspect;
+width / aspect;
+
 }
 
 plane.setAttribute(
@@ -253,61 +91,105 @@ height
 
 });
 
-// --------------------
-// START BUTTON
-// --------------------
+/* =========================
+START BUTTON
+========================= */
+
 startBtn.addEventListener(
 "click",
 async () => {
 
-try {
+try{
 
-video.muted = false;
-video.volume = 1;
+/* ENABLE AUDIO */
 
-await video.play();
-video.pause();
+arVideo.muted = false;
+
+await arVideo.play();
+
+arVideo.pause();
 
 audioReady = true;
 
-startScreen.style.display =
+/* FADE OUT INTRO */
+
+introScreen.style.transition =
+"opacity 1s ease";
+
+introScreen.style.opacity = "0";
+
+/* REMOVE INTRO */
+
+setTimeout(() => {
+
+introScreen.style.display =
 "none";
 
-} catch(err){
+},1000);
+
+}catch(err){
+
 console.log(err);
+
 }
 
 });
 
-// --------------------
-// TARGET FOUND
-// --------------------
+/* =========================
+TARGET FOUND
+========================= */
+
 target.addEventListener(
 "targetFound",
 async () => {
 
 if(!audioReady) return;
+if(isPlaying) return;
 
 try{
-await video.play();
+
+await arVideo.play();
+
+isPlaying = true;
+
 }catch(err){
+
 console.log(err);
+
 }
 
 });
 
-// --------------------
-// TARGET LOST
-// --------------------
+/* =========================
+TARGET LOST
+========================= */
+
 target.addEventListener(
 "targetLost",
 () => {
 
-video.pause();
+arVideo.pause();
+
+isPlaying = false;
 
 });
 
 });
+
+/* =========================
+CAMERA ERROR
+========================= */
+
+window.addEventListener(
+"camera-error",
+() => {
+
+alert(
+"Camera permission required"
+);
+
+});
+
 </script>
 
 </body>
