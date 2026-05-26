@@ -1,288 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8" />
 
 <meta
-name="viewport"
-content="
-width=device-width,
-initial-scale=1.0,
-maximum-scale=1.0,
-user-scalable=no,
-viewport-fit=cover
-"
+  name="viewport"
+  content="width=device-width,
+  initial-scale=1.0,
+  maximum-scale=1.0,
+  user-scalable=no"
 />
 
-<title>CFrames AR Experience</title>
+<title>Professional AR Frame</title>
 
-<!-- AFRAME -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-
-<!-- MINDAR -->
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
 <style>
-
-/* =========================
-RESET
-========================= */
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  touch-action: none;
 }
 
-html,
-body{
-
-width:100%;
-height:100%;
-
-overflow:hidden;
-
-font-family:Arial,sans-serif;
-
-background:transparent;
-
+/* Start Screen */
+#startScreen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.45);
+  z-index: 9999;
 }
 
-/* =========================
-INTRO SCREEN
-========================= */
-
-#startScreen{
-
-position:fixed;
-
-top:0;
-left:0;
-
-width:100%;
-height:100%;
-
-z-index:9999;
-
-overflow:hidden;
-
-display:flex;
-justify-content:center;
-align-items:center;
-
-background:#000;
-
+#startBtn {
+  border: none;
+  outline: none;
+  padding: 16px 28px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
 }
-
-/* =========================
-BACKGROUND IMAGE
-========================= */
-
-#introImage{
-
-position:absolute;
-
-width:100%;
-height:100%;
-
-object-fit:cover;
-
-}
-
-/* =========================
-OVERLAY
-========================= */
-
-.overlay{
-
-position:absolute;
-inset:0;
-
-background:
-rgba(0,0,0,0.30);
-
-}
-
-/* =========================
-GLASS BUTTON
-========================= */
-
-#startBtn{
-
-position:absolute;
-
-bottom:80px;
-left:50%;
-
-transform:translateX(-50%);
-
-z-index:10;
-
-padding:18px 42px;
-
-border:none;
-
-border-radius:24px;
-
-background:
-rgba(255,255,255,0.14);
-
-backdrop-filter:blur(14px);
--webkit-backdrop-filter:blur(14px);
-
-border:
-1px solid rgba(255,255,255,0.25);
-
-color:#fff;
-
-font-size:18px;
-font-weight:600;
-
-cursor:pointer;
-
-transition:.25s ease;
-
-}
-
-#startBtn:active{
-
-transform:
-translateX(-50%)
-scale(.96);
-
-}
-
-/* =========================
-AR CAMERA FIX
-========================= */
-
-a-scene{
-
-position:fixed !important;
-
-top:0 !important;
-left:0 !important;
-
-width:100vw !important;
-height:100vh !important;
-
-z-index:1 !important;
-
-background:transparent !important;
-
-}
-
-/* REMOVE DEFAULT UI */
-
-.mindar-ui-overlay{
-display:none !important;
-}
-
-.a-loader-title{
-display:none !important;
-}
-
-.a-enter-vr{
-display:none !important;
-}
-
-canvas{
-display:block !important;
-background:transparent !important;
-}
-
-video{
-max-width:none !important;
-}
-
-.a-video{
-object-fit:cover !important;
-}
-
 </style>
-
 </head>
 
 <body>
 
-<!-- =========================
-INTRO SCREEN
-========================= -->
-
+<!-- Start Screen -->
 <div id="startScreen">
-
-<!-- BACKGROUND IMAGE -->
-
-<img
-id="introImage"
-src="background.jpg"
-alt="Background"
-/>
-
-<!-- OVERLAY -->
-
-<div class="overlay"></div>
-
-<!-- BUTTON -->
-
-<button id="startBtn">
-Start AR Experience
-</button>
-
+  <button id="startBtn">
+    Tap To Start AR
+  </button>
 </div>
-
-<!-- =========================
-AR SCENE
-========================= -->
 
 <a-scene
 
-embedded
-
-loading-screen="enabled:false"
-
 mindar-image="
-
 imageTargetSrc: targets.mind;
 
-autoStart:true;
+autoStart: true;
+uiScanning: false;
+uiLoading: false;
+uiError: false;
 
-uiScanning:false;
-uiLoading:false;
-uiError:false;
+/* Smooth Tracking */
+filterMinCF: 0.0005;
+filterBeta: 0.001;
 
-/* SMOOTH TRACKING */
-
-filterMinCF:0.0001;
-filterBeta:0.001;
-
-warmupTolerance:8;
-missTolerance:12;
-
+warmupTolerance: 20;
+missTolerance: 5;
 "
 
 renderer="
-antialias:true;
-alpha:true;
-precision:medium;
+antialias: true;
+alpha: true;
+precision: high;
+physicallyCorrectLights: true;
+colorManagement: true;
 "
 
 color-space="sRGB"
-
-vr-mode-ui="enabled:false"
-
-device-orientation-permission-ui="
-enabled:false
-"
-
+vr-mode-ui="enabled: false"
+device-orientation-permission-ui="enabled: false"
 >
 
-<!-- =========================
-ASSETS
-========================= -->
-
+<!-- Assets -->
 <a-assets timeout="10000">
 
 <video
@@ -293,68 +100,30 @@ crossorigin="anonymous"
 playsinline
 webkit-playsinline
 loop
-muted
 ></video>
 
 </a-assets>
 
-<!-- =========================
-CAMERA
-========================= -->
-
+<!-- Camera -->
 <a-camera
 position="0 0 0"
-look-controls="enabled:false"
-camera="near:0.01; far:10000"
+look-controls="enabled: false"
 ></a-camera>
 
-<!-- =========================
-TARGET
-========================= -->
-
+<!-- AR Target -->
 <a-entity
-
 id="target"
-
-mindar-image-target="
-targetIndex:0
-"
-
-animation="
-property: position;
-dur:250;
-easing:easeOutQuad;
-"
-
-animation__rotation="
-property: rotation;
-dur:250;
-easing:easeOutQuad;
-"
-
+mindar-image-target="targetIndex: 0"
 >
 
-<!-- =========================
-VIDEO
-========================= -->
-
+<!-- Video Plane -->
 <a-video
-
 id="videoPlane"
-
 src="#vid"
-
-position="0 0.02 0"
-
-width="0.82"
-height="1.15"
-
-material="
-shader:flat;
-transparent:true;
-side:double;
-"
-
+position="0 0 0"
+width="1"
+height="1"
+material="shader: flat;"
 ></a-video>
 
 </a-entity>
@@ -362,20 +131,9 @@ side:double;
 </a-scene>
 
 <script>
-
 document.addEventListener(
 "DOMContentLoaded",
 () => {
-
-/* =========================
-ELEMENTS
-========================= */
-
-const startBtn =
-document.getElementById("startBtn");
-
-const startScreen =
-document.getElementById("startScreen");
 
 const video =
 document.getElementById("vid");
@@ -383,82 +141,119 @@ document.getElementById("vid");
 const target =
 document.getElementById("target");
 
-/* =========================
-START BUTTON
-========================= */
+const plane =
+document.getElementById("videoPlane");
 
+const startBtn =
+document.getElementById("startBtn");
+
+const startScreen =
+document.getElementById("startScreen");
+
+let audioReady = false;
+
+// -------------------
+// AUTO FIT VIDEO
+// -------------------
+video.addEventListener(
+"loadedmetadata",
+() => {
+
+const aspect =
+video.videoWidth /
+video.videoHeight;
+
+// Square frame
+const frameWidth = 1;
+const frameHeight = 1;
+
+let width;
+let height;
+
+// COVER FIT
+if (
+aspect >
+frameWidth /
+frameHeight
+) {
+
+height = frameHeight;
+width = height * aspect;
+
+} else {
+
+width = frameWidth;
+height = width / aspect;
+}
+
+plane.setAttribute(
+"width",
+width
+);
+
+plane.setAttribute(
+"height",
+height
+);
+
+});
+
+// -------------------
+// AUDIO UNLOCK
+// -------------------
 startBtn.addEventListener(
 "click",
 async () => {
 
-try{
-
-/* UNLOCK AUDIO */
+try {
 
 video.muted = false;
+video.volume = 1;
 
-/* HIDE INTRO */
+await video.play();
+video.pause();
 
-startScreen.style.transition =
-"opacity .5s ease";
-
-startScreen.style.opacity = "0";
-
-setTimeout(() => {
+audioReady = true;
 
 startScreen.style.display =
 "none";
 
-},500);
-
-}catch(err){
-
+} catch(err) {
 console.log(err);
-
 }
 
 });
 
-/* =========================
-TARGET FOUND
-========================= */
-
+// -------------------
+// TARGET FOUND
+// -------------------
 target.addEventListener(
 "targetFound",
 async () => {
 
-try{
+if (!audioReady) return;
 
-video.currentTime = 0;
-
+try {
 await video.play();
-
-}catch(err){
-
+} catch(err) {
 console.log(err);
-
 }
 
 });
 
-/* =========================
-TARGET LOST
-========================= */
-
+// -------------------
+// TARGET LOST
+// -------------------
 target.addEventListener(
 "targetLost",
 () => {
 
 video.pause();
 
-video.currentTime = 0;
-
 });
 
 });
-
 </script>
 
 </body>
-
 </html>
