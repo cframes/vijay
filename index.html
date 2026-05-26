@@ -1,23 +1,186 @@
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-  </head>
-  <body>
-    <a-scene mindar-image="imageTargetSrc: targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-assets>
-        <video id="vid" src="video.mp4" loop crossorigin="anonymous" playsinline></video>
-      </a-assets>
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-video src="#vid" width="1" height="1.5" position="0 0 0"></a-video>
-      </a-entity>
-    </a-scene>
-    <script>
-      document.addEventListener("click", function () {
-        document.querySelector("#vid").play();
-      });
-    </script>
-  </body>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no"
+  />
+
+  <!-- AFRAME -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+  <!-- MINDAR -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: black;
+      width: 100vw;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #loadingScreen {
+      position: fixed;
+      inset: 0;
+      background: black;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 18px;
+      transition: opacity 0.5s ease;
+    }
+
+    #loadingScreen.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- LOADING -->
+  <div id="loadingScreen">Loading AR...</div>
+
+  <a-scene
+    mindar-image="
+      imageTargetSrc: targets.mind;
+      autoStart: true;
+      uiLoading: no;
+      uiScanning: yes;
+      uiError: no;
+      filterMinCF: 0.0001;
+      filterBeta: 0.001;
+    "
+
+    embedded
+    color-space="sRGB"
+
+    renderer="
+      physicallyCorrectLights: true;
+      colorManagement: true;
+      precision: mediump;
+      antialias: true;
+    "
+
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+  >
+
+    <!-- ASSETS -->
+    <a-assets timeout="30000">
+
+      <video
+        id="video"
+        src="video.mp4"
+        preload="auto"
+        autoplay
+        muted
+        loop
+        crossorigin="anonymous"
+        playsinline
+        webkit-playsinline
+      ></video>
+
+    </a-assets>
+
+    <!-- CAMERA -->
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+    ></a-camera>
+
+    <!-- TARGET -->
+    <a-entity mindar-image-target="targetIndex: 0">
+
+      <!-- VIDEO -->
+      <a-video
+        id="videoPlane"
+        src="#video"
+        width="1"
+        height="1.5"
+        position="0 0 0"
+        material="shader: flat;"
+      ></a-video>
+
+    </a-entity>
+
+  </a-scene>
+
+  <script>
+    const video = document.querySelector("#video");
+    const loading = document.querySelector("#loadingScreen");
+    const scene = document.querySelector("a-scene");
+    const target = document.querySelector("[mindar-image-target]");
+
+    // REMOVE WHITE FLASH / LOADING SCREEN
+    scene.addEventListener("renderstart", () => {
+      setTimeout(() => {
+        loading.classList.add("hide");
+      }, 500);
+    });
+
+    // MOBILE AUTOPLAY FIX
+    const startVideo = async () => {
+      try {
+        await video.play();
+      } catch (e) {}
+    };
+
+    document.body.addEventListener("click", startVideo);
+    document.body.addEventListener("touchstart", startVideo);
+
+    // TARGET FOUND
+    target.addEventListener("targetFound", async () => {
+      try {
+        await video.play();
+      } catch (e) {}
+    });
+
+    // TARGET LOST
+    target.addEventListener("targetLost", () => {
+      video.pause();
+    });
+
+    // AUTO FIT VIDEO RATIO
+    video.addEventListener("loadedmetadata", () => {
+
+      const videoPlane = document.querySelector("#videoPlane");
+
+      const videoWidth = video.videoWidth;
+      const videoHeight = video.videoHeight;
+
+      const ratio = videoWidth / videoHeight;
+
+      // PORTRAIT VIDEO
+      if (ratio < 1) {
+        videoPlane.setAttribute("width", "1");
+        videoPlane.setAttribute("height", 1 / ratio);
+      }
+
+      // LANDSCAPE VIDEO
+      else {
+        videoPlane.setAttribute("width", ratio);
+        videoPlane.setAttribute("height", "1");
+      }
+    });
+
+  </script>
+
+</body>
 </html>
