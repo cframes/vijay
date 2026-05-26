@@ -1,144 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8" />
 
 <meta
-  name="viewport"
-  content="width=device-width,
-  initial-scale=1.0,
-  maximum-scale=1.0,
-  user-scalable=no"
+name="viewport"
+content="
+width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no
+"
 />
 
 <title>cframes AR Experience</title>
 
+<!-- AFRAME -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+<!-- MINDAR -->
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
 <style>
+
+/* =========================
+RESET
+========================= */
+
 *{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+margin:0;
+padding:0;
+box-sizing:border-box;
 }
 
 html,body{
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  touch-action:none;
-  font-family:Arial,sans-serif;
+width:100%;
+height:100%;
+overflow:hidden;
+touch-action:none;
+font-family:Arial,sans-serif;
+background:#000;
 }
 
-/* Intro Screen */
+/* =========================
+INTRO SCREEN
+========================= */
+
 #startScreen{
-  position:fixed;
-  inset:0;
-  background:linear-gradient(
-    to bottom,
-    #ffffff,
-    #f5f5f5
-  );
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
+
+position:fixed;
+inset:0;
+
+z-index:9999;
+
+overflow:hidden;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+background:#000;
+
 }
 
-/* Container */
-.intro-container{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  width:90%;
+/* =========================
+BACKGROUND IMAGE
+========================= */
+
+#introImage{
+
+position:absolute;
+
+width:100%;
+height:100%;
+
+object-fit:cover;
+
 }
 
-/* Logo */
-.logo{
-  width:80%;
-  max-width:420px;
-  object-fit:contain;
-  margin-bottom:40px;
+/* =========================
+DARK OVERLAY
+========================= */
+
+.overlay{
+
+position:absolute;
+inset:0;
+
+background:
+rgba(0,0,0,0.35);
+
 }
 
-/* Button */
+/* =========================
+GLASS BUTTON
+========================= */
+
 #startBtn{
-  border:none;
-  outline:none;
-  background:#111;
-  color:#fff;
-  padding:16px 30px;
-  border-radius:18px;
-  font-size:18px;
-  font-weight:600;
-  cursor:pointer;
-  transition:.2s ease;
+
+position:absolute;
+
+bottom:80px;
+left:50%;
+
+transform:translateX(-50%);
+
+z-index:10;
+
+padding:18px 42px;
+
+border:none;
+
+border-radius:24px;
+
+background:
+rgba(255,255,255,0.14);
+
+backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);
+
+border:
+1px solid rgba(255,255,255,0.25);
+
+color:#fff;
+
+font-size:18px;
+font-weight:600;
+
+cursor:pointer;
+
+transition:.25s ease;
+
 }
+
+/* BUTTON CLICK */
 
 #startBtn:active{
-  transform:scale(.96);
+
+transform:
+translateX(-50%)
+scale(.96);
+
 }
+
+/* =========================
+AR SCENE
+========================= */
+
+a-scene{
+
+position:fixed !important;
+
+inset:0 !important;
+
+width:100% !important;
+height:100% !important;
+
+}
+
 </style>
+
 </head>
 
 <body>
 
-<!-- Intro Screen -->
+<!-- =========================
+INTRO SCREEN
+========================= -->
+
 <div id="startScreen">
 
-  <div class="intro-container">
+<!-- BACKGROUND IMAGE -->
 
-    <!-- Logo -->
-    <img
-      src="logo.png"
-      alt="cframes"
-      class="logo"
-    />
+<img
+id="introImage"
+src="background.jpg"
+alt="Background"
+/>
 
-    <!-- Button -->
-    <button id="startBtn">
-      Start AR Experience
-    </button>
+<!-- OVERLAY -->
 
-  </div>
+<div class="overlay"></div>
+
+<!-- BUTTON -->
+
+<button id="startBtn">
+Start AR Experience
+</button>
 
 </div>
 
-<!-- AR Scene -->
+<!-- =========================
+AR SCENE
+========================= -->
+
 <a-scene
 
+id="scene"
+
+embedded
+
+color-space="sRGB"
+
+renderer="
+colorManagement:true;
+physicallyCorrectLights:true;
+antialias:true;
+alpha:true;
+"
+
+vr-mode-ui="enabled:false"
+
+device-orientation-permission-ui="
+enabled:false
+"
+
 mindar-image="
+
 imageTargetSrc: targets.mind;
 
-autoStart:true;
+autoStart:false;
+
 uiScanning:false;
 uiLoading:false;
 uiError:false;
 
-/* Smooth tracking */
-filterMinCF:0.0005;
-filterBeta:0.001;
+filterMinCF:0.001;
+filterBeta:0.01;
 
-warmupTolerance:20;
-missTolerance:5;
+warmupTolerance:5;
+missTolerance:10;
+
 "
 
-renderer="
-antialias:true;
-alpha:true;
-precision:high;
-physicallyCorrectLights:true;
-colorManagement:true;
-"
-
-color-space="sRGB"
-vr-mode-ui="enabled:false"
-device-orientation-permission-ui="enabled:false"
 >
 
-<!-- Assets -->
+<!-- =========================
+ASSETS
+========================= -->
+
 <a-assets timeout="10000">
+
+<!-- AR VIDEO -->
 
 <video
 id="vid"
@@ -148,30 +253,45 @@ crossorigin="anonymous"
 playsinline
 webkit-playsinline
 loop
+muted
 ></video>
 
 </a-assets>
 
-<!-- Camera -->
+<!-- =========================
+CAMERA
+========================= -->
+
 <a-camera
 position="0 0 0"
 look-controls="enabled:false"
 ></a-camera>
 
-<!-- AR Target -->
+<!-- =========================
+AR TARGET
+========================= -->
+
 <a-entity
 id="target"
 mindar-image-target="targetIndex:0"
 >
 
-<!-- Video -->
 <a-video
+
 id="videoPlane"
+
 src="#vid"
+
 position="0 0 0"
+
 width="1"
 height="1"
-material="shader:flat;"
+
+material="
+shader:flat;
+transparent:true;
+"
+
 ></a-video>
 
 </a-entity>
@@ -179,9 +299,14 @@ material="shader:flat;"
 </a-scene>
 
 <script>
+
 document.addEventListener(
 "DOMContentLoaded",
 () => {
+
+/* =========================
+ELEMENTS
+========================= */
 
 const video =
 document.getElementById("vid");
@@ -198,11 +323,13 @@ document.getElementById("startBtn");
 const startScreen =
 document.getElementById("startScreen");
 
-let audioReady = false;
+const scene =
+document.getElementById("scene");
 
-// --------------------
-// AUTO FIT VIDEO
-// --------------------
+/* =========================
+AUTO FIT VIDEO
+========================= */
+
 video.addEventListener(
 "loadedmetadata",
 () => {
@@ -217,28 +344,24 @@ const frameHeight = 1;
 let width;
 let height;
 
-// Cover Fit
-if (
+if(
 aspect >
 frameWidth /
 frameHeight
 ){
 
-height =
-frameHeight;
+height = frameHeight;
 
 width =
-height *
-aspect;
+height * aspect;
 
 }else{
 
-width =
-frameWidth;
+width = frameWidth;
 
 height =
-width /
-aspect;
+width / aspect;
+
 }
 
 plane.setAttribute(
@@ -253,61 +376,99 @@ height
 
 });
 
-// --------------------
-// START BUTTON
-// --------------------
+/* =========================
+START BUTTON
+========================= */
+
 startBtn.addEventListener(
 "click",
 async () => {
 
 try {
 
+/* Unlock Audio */
+
 video.muted = false;
-video.volume = 1;
 
 await video.play();
 video.pause();
 
-audioReady = true;
+/* Start Camera */
+
+const mindarSystem =
+scene.systems["mindar-image-system"];
+
+await mindarSystem.start();
+
+/* Hide Intro */
 
 startScreen.style.display =
 "none";
 
 } catch(err){
+
 console.log(err);
+
+alert(
+"Camera permission required"
+);
+
 }
 
 });
 
-// --------------------
-// TARGET FOUND
-// --------------------
+/* =========================
+TARGET FOUND
+========================= */
+
 target.addEventListener(
 "targetFound",
 async () => {
 
-if(!audioReady) return;
-
 try{
+
+video.currentTime = 0;
+
 await video.play();
+
 }catch(err){
+
 console.log(err);
+
 }
 
 });
 
-// --------------------
-// TARGET LOST
-// --------------------
+/* =========================
+TARGET LOST
+========================= */
+
 target.addEventListener(
 "targetLost",
 () => {
 
 video.pause();
 
+video.currentTime = 0;
+
+});
+
+/* =========================
+CAMERA ERROR
+========================= */
+
+window.addEventListener(
+"camera-error",
+() => {
+
+alert(
+"Camera permission denied"
+);
+
 });
 
 });
+
 </script>
 
 </body>
