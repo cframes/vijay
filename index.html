@@ -1,196 +1,366 @@
-material="
-shader:flat;
-transparent:true;
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8" />
+
+<meta
+name="viewport"
+content="
+width=device-width,
+initial-scale=1.0,
+maximum-scale=1.0,
+user-scalable=no
+"
+/>
+
+<title>Cinematic AR Experience</title>
+
+<!-- AFRAME -->
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+
+<!-- MINDAR -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+
+<style>
+
+/* RESET */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+html,body{
+width:100%;
+height:100%;
+overflow:hidden;
+background:#000;
+font-family:Arial,sans-serif;
+touch-action:none;
+}
+
+/* =========================
+INTRO SCREEN
+========================= */
+
+#introScreen{
+
+position:fixed;
+inset:0;
+
+z-index:99999;
+
+background:#000;
+
+overflow:hidden;
+
+display:flex;
+justify-content:center;
+align-items:center;
+
+}
+
+/* INTRO VIDEO */
+
+#introVideo{
+
+position:absolute;
+
+width:100%;
+height:100%;
+
+object-fit:cover;
+
+}
+
+/* DARK OVERLAY */
+
+.overlay{
+
+position:absolute;
+inset:0;
+
+background:
+linear-gradient(
+to bottom,
+rgba(0,0,0,0.25),
+rgba(0,0,0,0.55)
+);
+
+}
+
+/* =========================
+GLASSMORPHISM BUTTON
+========================= */
+
+#startBtn{
+
+position:absolute;
+
+bottom:70px;
+left:50%;
+
+transform:translateX(-50%);
+
+z-index:10;
+
+padding:18px 42px;
+
+border-radius:24px;
+
+border:
+1px solid rgba(255,255,255,0.25);
+
+background:
+rgba(255,255,255,0.12);
+
+backdrop-filter:blur(14px);
+-webkit-backdrop-filter:blur(14px);
+
+color:#fff;
+
+font-size:18px;
+font-weight:600;
+
+letter-spacing:.5px;
+
+cursor:pointer;
+
+overflow:hidden;
+
+transition:
+transform .25s ease,
+background .25s ease,
+border .25s ease,
+box-shadow .25s ease;
+
+box-shadow:
+0 8px 32px rgba(0,0,0,0.25);
+
+}
+
+/* LIGHT REFLECTION */
+
+#startBtn::before{
+
+content:"";
+
+position:absolute;
+
+top:0;
+left:-120%;
+
+width:80%;
+height:100%;
+
+background:
+linear-gradient(
+90deg,
+transparent,
+rgba(255,255,255,0.4),
+transparent
+);
+
+transform:skewX(-25deg);
+
+transition:.8s;
+
+}
+
+/* HOVER */
+
+#startBtn:hover{
+
+background:
+rgba(255,255,255,0.18);
+
+border:
+1px solid rgba(255,255,255,0.4);
+
+box-shadow:
+0 10px 40px rgba(255,255,255,0.08),
+0 8px 32px rgba(0,0,0,0.35);
+
+}
+
+/* LIGHT ANIMATION */
+
+#startBtn:hover::before{
+left:140%;
+}
+
+/* CLICK */
+
+#startBtn:active{
+
+transform:
+translateX(-50%)
+scale(.96);
+
+}
+
+/* =========================
+SCANNING TEXT
+========================= */
+
+.scanText{
+
+position:absolute;
+
+bottom:25px;
+left:50%;
+
+transform:translateX(-50%);
+
+z-index:10;
+
+color:rgba(255,255,255,0.75);
+
+font-size:13px;
+
+letter-spacing:2px;
+
+text-transform:uppercase;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- =========================
+INTRO SCREEN
+========================= -->
+
+<div id="introScreen">
+
+<!-- INTRO VIDEO -->
+
+<video
+id="introVideo"
+src="logo.mp4"
+autoplay
+muted
+loop
+playsinline
+webkit-playsinline
+></video>
+
+<!-- OVERLAY -->
+
+<div class="overlay"></div>
+
+<!-- BUTTON -->
+
+<button id="startBtn">
+Start AR Experience
+</button>
+
+<!-- TEXT -->
+
+<div class="scanText">
+Interactive Augmented Reality
+</div>
+
+</div>
+
+<!-- =========================
+AR SCENE
+========================= -->
+
+<a-scene
+
+mindar-image="
+
+imageTargetSrc: targets.mind;
+
+autoStart:true;
+
+uiScanning:false;
+uiLoading:false;
+uiError:false;
+
+filterMinCF:0.001;
+filterBeta:0.01;
+
+warmupTolerance:5;
+missTolerance:10;
+
 "
 
-></a-video>
+renderer="
 
-</a-entity>
+antialias:true;
+alpha:true;
+precision:high;
 
-</a-scene>
+physicallyCorrectLights:true;
 
-<script>
+colorManagement:true;
 
-document.addEventListener(
-"DOMContentLoaded",
-() => {
+"
 
-/* =========================
-ELEMENTS
-========================= */
+color-space="sRGB"
 
-const startBtn =
-document.getElementById("startBtn");
+vr-mode-ui="enabled:false"
 
-const introScreen =
-document.getElementById("introScreen");
+device-orientation-permission-ui="
+enabled:false
+"
 
-const arVideo =
-document.getElementById("arVideo");
+embedded
 
-const target =
-document.getElementById("target");
+>
 
-const plane =
-document.getElementById("videoPlane");
+<!-- =========================
+ASSETS
+========================= -->
 
-/* =========================
-STATES
-========================= */
+<a-assets timeout="10000">
 
-let audioReady = false;
-let isPlaying = false;
+<video
+id="arVideo"
+src="video.mp4"
+preload="auto"
+crossorigin="anonymous"
+playsinline
+webkit-playsinline
+loop
+muted
+></video>
 
-/* =========================
-AUTO FIT VIDEO
-========================= */
+</a-assets>
 
-arVideo.addEventListener(
-"loadedmetadata",
-() => {
+<!-- =========================
+CAMERA
+========================= -->
 
-const aspect =
-arVideo.videoWidth /
-arVideo.videoHeight;
+<a-camera
+position="0 0 0"
+look-controls="enabled:false"
+></a-camera>
 
-const frameWidth = 1;
-const frameHeight = 1;
+<!-- =========================
+TARGET
+========================= -->
 
-let width;
-let height;
+<a-entity
+id="target"
+mindar-image-target="targetIndex:0"
+>
 
-if(
-aspect >
-frameWidth /
-frameHeight
-){
+<a-video
 
-height = frameHeight;
+id="videoPlane"
 
-width =
-height * aspect;
+src="#arVideo"
 
-}else{
+position="0 0 0"
 
-width = frameWidth;
-
-height =
-width / aspect;
-
-}
-
-plane.setAttribute(
-"width",
-width
-);
-
-plane.setAttribute(
-"height",
-height
-);
-
-});
-
-/* =========================
-START BUTTON
-========================= */
-
-startBtn.addEventListener(
-"click",
-async () => {
-
-try{
-
-/* ENABLE AUDIO */
-
-arVideo.muted = false;
-
-await arVideo.play();
-
-arVideo.pause();
-
-audioReady = true;
-
-/* FADE OUT INTRO */
-
-introScreen.style.transition =
-"opacity 1s ease";
-
-introScreen.style.opacity = "0";
-
-/* REMOVE INTRO */
-
-setTimeout(() => {
-
-introScreen.style.display =
-"none";
-
-},1000);
-
-}catch(err){
-
-console.log(err);
-
-}
-
-});
-
-/* =========================
-TARGET FOUND
-========================= */
-
-target.addEventListener(
-"targetFound",
-async () => {
-
-if(!audioReady) return;
-if(isPlaying) return;
-
-try{
-
-await arVideo.play();
-
-isPlaying = true;
-
-}catch(err){
-
-console.log(err);
-
-}
-
-});
-
-/* =========================
-TARGET LOST
-========================= */
-
-target.addEventListener(
-"targetLost",
-() => {
-
-arVideo.pause();
-
-isPlaying = false;
-
-});
-
-});
-
-/* =========================
-CAMERA ERROR
-========================= */
-
-window.addEventListener(
-"camera-error",
-() => {
-
-alert(
-"Camera permission required"
-);
-
-});
-
-</script>
-
-</body>
-</html>
+width="1"
+height="1"
