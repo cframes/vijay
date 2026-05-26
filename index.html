@@ -1,239 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8" />
-
-<meta
-name="viewport"
-content="
-width=device-width,
-initial-scale=1.0,
-maximum-scale=1.0,
-user-scalable=no
-"
-/>
-
-<title>AR Experience</title>
-
-<!-- AFRAME -->
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-
-<!-- MINDAR -->
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-html,body{
-width:100%;
-height:100%;
-overflow:hidden;
-background:#000;
-font-family:Arial,sans-serif;
-}
-
-/* INTRO */
-
-#introScreen{
-
-position:fixed;
-inset:0;
-
-z-index:9999;
-
-overflow:hidden;
-
-display:flex;
-justify-content:center;
-align-items:center;
-
-background:#000;
-
-}
-
-/* INTRO VIDEO */
-
-#introVideo{
-
-position:absolute;
-
-width:100%;
-height:100%;
-
-object-fit:cover;
-
-}
-
-/* OVERLAY */
-
-.overlay{
-
-position:absolute;
-inset:0;
-
-background:
-rgba(0,0,0,0.35);
-
-}
-
-/* BUTTON */
-
-#startBtn{
-
-position:absolute;
-
-bottom:80px;
-left:50%;
-
-transform:translateX(-50%);
-
-z-index:10;
-
-padding:18px 40px;
-
-border:none;
-
-border-radius:22px;
-
-background:
-rgba(255,255,255,0.14);
-
-backdrop-filter:blur(14px);
--webkit-backdrop-filter:blur(14px);
-
-border:
-1px solid rgba(255,255,255,0.25);
-
-color:#fff;
-
-font-size:18px;
-font-weight:600;
-
-cursor:pointer;
-
-}
-
-/* SCENE */
-
-a-scene{
-position:fixed !important;
-inset:0 !important;
-width:100% !important;
-height:100% !important;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<!-- =========================
-INTRO
-========================= -->
-
-<div id="introScreen">
-
-<!-- INTRO VIDEO -->
-
-<video
-id="introVideo"
-src="logo.mp4"
-playsinline
-webkit-playsinline
-autoplay
-loop
-></video>
-
-<div class="overlay"></div>
-
-<button id="startBtn">
-Start AR Experience
-</button>
-
-</div>
-
-<!-- =========================
-AR
-========================= -->
-
-<a-scene
-
-id="scene"
-
-embedded
-
-color-space="sRGB"
-
-renderer="
-colorManagement:true;
-physicallyCorrectLights:true;
-antialias:true;
-alpha:true;
-"
-
-vr-mode-ui="enabled:false"
-
-device-orientation-permission-ui="
-enabled:false
-"
-
-mindar-image="
-
-imageTargetSrc: targets.mind;
-
-autoStart:true;
-
-uiScanning:false;
-uiLoading:false;
-uiError:false;
-
-"
-
->
-
-<a-assets>
-
-<video
-id="arVideo"
-src="video.mp4"
-preload="auto"
-crossorigin="anonymous"
-playsinline
-webkit-playsinline
-loop
-></video>
-
-</a-assets>
-
-<a-camera
-position="0 0 0"
-look-controls="enabled:false"
-></a-camera>
-
-<a-entity
-id="target"
-mindar-image-target="targetIndex:0"
->
-
-<a-video
-
-id="videoPlane"
-
-src="#arVideo"
-
-position="0 0 0"
-
-width="1"
-height="1"
-
 material="
 shader:flat;
 transparent:true;
@@ -251,16 +15,15 @@ document.addEventListener(
 "DOMContentLoaded",
 () => {
 
-/* ELEMENTS */
+/* =========================
+ELEMENTS
+========================= */
 
 const startBtn =
 document.getElementById("startBtn");
 
 const introScreen =
 document.getElementById("introScreen");
-
-const introVideo =
-document.getElementById("introVideo");
 
 const arVideo =
 document.getElementById("arVideo");
@@ -271,63 +34,12 @@ document.getElementById("target");
 const plane =
 document.getElementById("videoPlane");
 
-/* STATES */
-
-let started = false;
-
 /* =========================
-INTRO AUDIO ENABLE
+STATES
 ========================= */
 
-startBtn.addEventListener(
-"click",
-async () => {
-
-if(started) return;
-
-started = true;
-
-try{
-
-/* ENABLE INTRO AUDIO */
-
-introVideo.muted = false;
-
-await introVideo.play();
-
-/* ENABLE AR VIDEO AUDIO */
-
-arVideo.muted = false;
-
-await arVideo.play();
-
-arVideo.pause();
-
-/* HIDE INTRO */
-
-introScreen.style.transition =
-"opacity .8s ease";
-
-introScreen.style.opacity = "0";
-
-setTimeout(() => {
-
-introScreen.style.display =
-"none";
-
-},800);
-
-}catch(err){
-
-console.log(err);
-
-alert(
-"Please allow audio/video permissions"
-);
-
-}
-
-});
+let audioReady = false;
+let isPlaying = false;
 
 /* =========================
 AUTO FIT VIDEO
@@ -341,18 +53,29 @@ const aspect =
 arVideo.videoWidth /
 arVideo.videoHeight;
 
-let width = 1;
-let height = 1;
+const frameWidth = 1;
+const frameHeight = 1;
 
-if(aspect > 1){
+let width;
+let height;
 
-height = 1;
-width = aspect;
+if(
+aspect >
+frameWidth /
+frameHeight
+){
+
+height = frameHeight;
+
+width =
+height * aspect;
 
 }else{
 
-width = 1;
-height = 1 / aspect;
+width = frameWidth;
+
+height =
+width / aspect;
 
 }
 
@@ -369,6 +92,50 @@ height
 });
 
 /* =========================
+START BUTTON
+========================= */
+
+startBtn.addEventListener(
+"click",
+async () => {
+
+try{
+
+/* ENABLE AUDIO */
+
+arVideo.muted = false;
+
+await arVideo.play();
+
+arVideo.pause();
+
+audioReady = true;
+
+/* FADE OUT INTRO */
+
+introScreen.style.transition =
+"opacity 1s ease";
+
+introScreen.style.opacity = "0";
+
+/* REMOVE INTRO */
+
+setTimeout(() => {
+
+introScreen.style.display =
+"none";
+
+},1000);
+
+}catch(err){
+
+console.log(err);
+
+}
+
+});
+
+/* =========================
 TARGET FOUND
 ========================= */
 
@@ -376,9 +143,14 @@ target.addEventListener(
 "targetFound",
 async () => {
 
+if(!audioReady) return;
+if(isPlaying) return;
+
 try{
 
 await arVideo.play();
+
+isPlaying = true;
 
 }catch(err){
 
@@ -398,6 +170,10 @@ target.addEventListener(
 
 arVideo.pause();
 
+isPlaying = false;
+
+});
+
 });
 
 /* =========================
@@ -409,10 +185,8 @@ window.addEventListener(
 () => {
 
 alert(
-"Camera permission denied"
+"Camera permission required"
 );
-
-});
 
 });
 
