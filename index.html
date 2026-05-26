@@ -15,7 +15,7 @@ user-scalable=no
 "
 />
 
-<title>cframes AR Experience</title>
+<title>CFrames AR Experience</title>
 
 <!-- AFRAME -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -39,7 +39,6 @@ html,body{
 width:100%;
 height:100%;
 overflow:hidden;
-touch-action:none;
 font-family:Arial,sans-serif;
 background:#000;
 }
@@ -55,11 +54,11 @@ inset:0;
 
 z-index:9999;
 
-overflow:hidden;
-
 display:flex;
 justify-content:center;
 align-items:center;
+
+overflow:hidden;
 
 background:#000;
 
@@ -81,7 +80,7 @@ object-fit:cover;
 }
 
 /* =========================
-DARK OVERLAY
+OVERLAY
 ========================= */
 
 .overlay{
@@ -90,7 +89,11 @@ position:absolute;
 inset:0;
 
 background:
-rgba(0,0,0,0.35);
+linear-gradient(
+to bottom,
+rgba(0,0,0,0.15),
+rgba(0,0,0,0.45)
+);
 
 }
 
@@ -107,22 +110,18 @@ left:50%;
 
 transform:translateX(-50%);
 
-z-index:10;
-
 padding:18px 42px;
-
-border:none;
 
 border-radius:24px;
 
+border:
+1px solid rgba(255,255,255,0.25);
+
 background:
-rgba(255,255,255,0.14);
+rgba(255,255,255,0.12);
 
 backdrop-filter:blur(14px);
 -webkit-backdrop-filter:blur(14px);
-
-border:
-1px solid rgba(255,255,255,0.25);
 
 color:#fff;
 
@@ -131,11 +130,13 @@ font-weight:600;
 
 cursor:pointer;
 
-transition:.25s ease;
+z-index:10;
+
+transition:
+transform .2s ease,
+background .2s ease;
 
 }
-
-/* BUTTON CLICK */
 
 #startBtn:active{
 
@@ -146,18 +147,37 @@ scale(.96);
 }
 
 /* =========================
-AR SCENE
+FULL CAMERA VIEW
 ========================= */
 
 a-scene{
 
 position:fixed !important;
 
-inset:0 !important;
+top:0;
+left:0;
 
-width:100% !important;
-height:100% !important;
+width:100vw !important;
+height:100vh !important;
 
+z-index:1;
+
+}
+
+/* REMOVE MINDAR UI */
+
+.mindar-ui-overlay{
+display:none !important;
+}
+
+/* CAMERA FIX */
+
+video{
+max-width:none !important;
+}
+
+canvas{
+display:block !important;
 }
 
 </style>
@@ -200,23 +220,6 @@ AR SCENE
 
 id="scene"
 
-embedded
-
-color-space="sRGB"
-
-renderer="
-colorManagement:true;
-physicallyCorrectLights:true;
-antialias:true;
-alpha:true;
-"
-
-vr-mode-ui="enabled:false"
-
-device-orientation-permission-ui="
-enabled:false
-"
-
 mindar-image="
 
 imageTargetSrc: targets.mind;
@@ -235,6 +238,22 @@ missTolerance:10;
 
 "
 
+renderer="
+
+antialias:true;
+colorManagement:true;
+physicallyCorrectLights:true;
+
+"
+
+color-space="sRGB"
+
+vr-mode-ui="enabled:false"
+
+device-orientation-permission-ui="
+enabled:false
+"
+
 >
 
 <!-- =========================
@@ -242,8 +261,6 @@ ASSETS
 ========================= -->
 
 <a-assets timeout="10000">
-
-<!-- AR VIDEO -->
 
 <video
 id="vid"
@@ -268,7 +285,7 @@ look-controls="enabled:false"
 ></a-camera>
 
 <!-- =========================
-AR TARGET
+TARGET
 ========================= -->
 
 <a-entity
@@ -308,14 +325,8 @@ document.addEventListener(
 ELEMENTS
 ========================= */
 
-const video =
-document.getElementById("vid");
-
-const target =
-document.getElementById("target");
-
-const plane =
-document.getElementById("videoPlane");
+const scene =
+document.getElementById("scene");
 
 const startBtn =
 document.getElementById("startBtn");
@@ -323,8 +334,14 @@ document.getElementById("startBtn");
 const startScreen =
 document.getElementById("startScreen");
 
-const scene =
-document.getElementById("scene");
+const target =
+document.getElementById("target");
+
+const video =
+document.getElementById("vid");
+
+const plane =
+document.getElementById("videoPlane");
 
 /* =========================
 AUTO FIT VIDEO
@@ -338,29 +355,18 @@ const aspect =
 video.videoWidth /
 video.videoHeight;
 
-const frameWidth = 1;
-const frameHeight = 1;
+let width = 1;
+let height = 1;
 
-let width;
-let height;
+if(aspect > 1){
 
-if(
-aspect >
-frameWidth /
-frameHeight
-){
-
-height = frameHeight;
-
-width =
-height * aspect;
+height = 1;
+width = aspect;
 
 }else{
 
-width = frameWidth;
-
-height =
-width / aspect;
+width = 1;
+height = 1 / aspect;
 
 }
 
@@ -384,33 +390,48 @@ startBtn.addEventListener(
 "click",
 async () => {
 
-try {
+try{
 
-/* Unlock Audio */
+/* UNLOCK AUDIO */
 
 video.muted = false;
 
 await video.play();
 video.pause();
 
-/* Start Camera */
+/* START CAMERA */
 
 const mindarSystem =
 scene.systems["mindar-image-system"];
 
+/* SMALL DELAY */
+
+setTimeout(async () => {
+
 await mindarSystem.start();
 
-/* Hide Intro */
+},150);
+
+/* HIDE INTRO */
+
+startScreen.style.transition =
+"opacity .6s ease";
+
+startScreen.style.opacity = "0";
+
+setTimeout(() => {
 
 startScreen.style.display =
 "none";
 
-} catch(err){
+},600);
+
+}catch(err){
 
 console.log(err);
 
 alert(
-"Camera permission required"
+"Please allow camera permission"
 );
 
 }
@@ -462,7 +483,7 @@ window.addEventListener(
 () => {
 
 alert(
-"Camera permission denied"
+"Camera access denied"
 );
 
 });
