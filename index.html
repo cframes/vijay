@@ -15,19 +15,13 @@ user-scalable=no
 "
 />
 
-<title>CFrames AR Experience</title>
+<title>CFrames AR</title>
 
-<!-- AFRAME -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 
-<!-- MINDAR -->
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
 <style>
-
-/* =========================
-RESET
-========================= */
 
 *{
 margin:0;
@@ -39,13 +33,11 @@ html,body{
 width:100%;
 height:100%;
 overflow:hidden;
-font-family:Arial,sans-serif;
 background:#000;
+font-family:Arial,sans-serif;
 }
 
-/* =========================
-INTRO SCREEN
-========================= */
+/* INTRO */
 
 #startScreen{
 
@@ -64,9 +56,7 @@ background:#000;
 
 }
 
-/* =========================
-BACKGROUND IMAGE
-========================= */
+/* BACKGROUND IMAGE */
 
 #introImage{
 
@@ -79,9 +69,7 @@ object-fit:cover;
 
 }
 
-/* =========================
-OVERLAY
-========================= */
+/* DARK OVERLAY */
 
 .overlay{
 
@@ -89,17 +77,11 @@ position:absolute;
 inset:0;
 
 background:
-linear-gradient(
-to bottom,
-rgba(0,0,0,0.15),
-rgba(0,0,0,0.45)
-);
+rgba(0,0,0,0.35);
 
 }
 
-/* =========================
-GLASS BUTTON
-========================= */
+/* BUTTON */
 
 #startBtn{
 
@@ -132,23 +114,9 @@ cursor:pointer;
 
 z-index:10;
 
-transition:
-transform .2s ease,
-background .2s ease;
-
 }
 
-#startBtn:active{
-
-transform:
-translateX(-50%)
-scale(.96);
-
-}
-
-/* =========================
-FULL CAMERA VIEW
-========================= */
+/* CAMERA FIX */
 
 a-scene{
 
@@ -164,20 +132,12 @@ z-index:1;
 
 }
 
-/* REMOVE MINDAR UI */
+canvas{
+display:block !important;
+}
 
 .mindar-ui-overlay{
 display:none !important;
-}
-
-/* CAMERA FIX */
-
-video{
-max-width:none !important;
-}
-
-canvas{
-display:block !important;
 }
 
 </style>
@@ -186,13 +146,9 @@ display:block !important;
 
 <body>
 
-<!-- =========================
-INTRO SCREEN
-========================= -->
+<!-- INTRO -->
 
 <div id="startScreen">
-
-<!-- BACKGROUND IMAGE -->
 
 <img
 id="introImage"
@@ -200,11 +156,7 @@ src="background.jpg"
 alt="Background"
 />
 
-<!-- OVERLAY -->
-
 <div class="overlay"></div>
-
-<!-- BUTTON -->
 
 <button id="startBtn">
 Start AR Experience
@@ -212,9 +164,7 @@ Start AR Experience
 
 </div>
 
-<!-- =========================
-AR SCENE
-========================= -->
+<!-- AR -->
 
 <a-scene
 
@@ -224,29 +174,20 @@ mindar-image="
 
 imageTargetSrc: targets.mind;
 
-autoStart:false;
+autoStart:true;
 
 uiScanning:false;
 uiLoading:false;
 uiError:false;
 
-filterMinCF:0.001;
-filterBeta:0.01;
-
-warmupTolerance:5;
-missTolerance:10;
-
-"
-
-renderer="
-
-antialias:true;
-colorManagement:true;
-physicallyCorrectLights:true;
-
 "
 
 color-space="sRGB"
+
+renderer="
+antialias:true;
+alpha:true;
+"
 
 vr-mode-ui="enabled:false"
 
@@ -256,11 +197,7 @@ enabled:false
 
 >
 
-<!-- =========================
-ASSETS
-========================= -->
-
-<a-assets timeout="10000">
+<a-assets>
 
 <video
 id="vid"
@@ -269,24 +206,16 @@ preload="auto"
 crossorigin="anonymous"
 playsinline
 webkit-playsinline
-loop
 muted
+loop
 ></video>
 
 </a-assets>
-
-<!-- =========================
-CAMERA
-========================= -->
 
 <a-camera
 position="0 0 0"
 look-controls="enabled:false"
 ></a-camera>
-
-<!-- =========================
-TARGET
-========================= -->
 
 <a-entity
 id="target"
@@ -321,31 +250,22 @@ document.addEventListener(
 "DOMContentLoaded",
 () => {
 
-/* =========================
-ELEMENTS
-========================= */
-
-const scene =
-document.getElementById("scene");
-
 const startBtn =
 document.getElementById("startBtn");
 
 const startScreen =
 document.getElementById("startScreen");
 
-const target =
-document.getElementById("target");
-
 const video =
 document.getElementById("vid");
+
+const target =
+document.getElementById("target");
 
 const plane =
 document.getElementById("videoPlane");
 
-/* =========================
-AUTO FIT VIDEO
-========================= */
+/* AUTO FIT VIDEO */
 
 video.addEventListener(
 "loadedmetadata",
@@ -382,9 +302,7 @@ height
 
 });
 
-/* =========================
-START BUTTON
-========================= */
+/* START BUTTON */
 
 startBtn.addEventListener(
 "click",
@@ -392,30 +310,14 @@ async () => {
 
 try{
 
-/* UNLOCK AUDIO */
+/* ONLY UNLOCK AUDIO */
 
 video.muted = false;
-
-await video.play();
-video.pause();
-
-/* START CAMERA */
-
-const mindarSystem =
-scene.systems["mindar-image-system"];
-
-/* SMALL DELAY */
-
-setTimeout(async () => {
-
-await mindarSystem.start();
-
-},150);
 
 /* HIDE INTRO */
 
 startScreen.style.transition =
-"opacity .6s ease";
+"opacity .5s ease";
 
 startScreen.style.opacity = "0";
 
@@ -424,23 +326,17 @@ setTimeout(() => {
 startScreen.style.display =
 "none";
 
-},600);
+},500);
 
 }catch(err){
 
 console.log(err);
 
-alert(
-"Please allow camera permission"
-);
-
 }
 
 });
 
-/* =========================
-TARGET FOUND
-========================= */
+/* TARGET FOUND */
 
 target.addEventListener(
 "targetFound",
@@ -460,9 +356,7 @@ console.log(err);
 
 });
 
-/* =========================
-TARGET LOST
-========================= */
+/* TARGET LOST */
 
 target.addEventListener(
 "targetLost",
@@ -471,20 +365,6 @@ target.addEventListener(
 video.pause();
 
 video.currentTime = 0;
-
-});
-
-/* =========================
-CAMERA ERROR
-========================= */
-
-window.addEventListener(
-"camera-error",
-() => {
-
-alert(
-"Camera access denied"
-);
 
 });
 
