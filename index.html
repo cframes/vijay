@@ -15,7 +15,7 @@ user-scalable=no
 "
 />
 
-<title>Cframes AR Experience</title>
+<title>Cinematic AR Experience</title>
 
 <!-- AFRAME -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -65,7 +65,9 @@ background:#000;
 
 }
 
-/* INTRO VIDEO */
+/* =========================
+INTRO VIDEO
+========================= */
 
 #introVideo{
 
@@ -78,7 +80,9 @@ object-fit:cover;
 
 }
 
-/* OVERLAY */
+/* =========================
+OVERLAY
+========================= */
 
 .overlay{
 
@@ -95,7 +99,7 @@ rgba(0,0,0,0.55)
 }
 
 /* =========================
-GLASS BUTTON
+GLASSMORPHISM BUTTON
 ========================= */
 
 #startBtn{
@@ -204,29 +208,6 @@ scale(.96);
 
 }
 
-/* TEXT */
-
-.scanText{
-
-position:absolute;
-
-bottom:28px;
-left:50%;
-
-transform:translateX(-50%);
-
-z-index:10;
-
-color:rgba(255,255,255,0.7);
-
-font-size:12px;
-
-letter-spacing:2px;
-
-text-transform:uppercase;
-
-}
-
 </style>
 
 </head>
@@ -251,7 +232,7 @@ playsinline
 webkit-playsinline
 ></video>
 
-<!-- OVERLAY -->
+<!-- DARK OVERLAY -->
 
 <div class="overlay"></div>
 
@@ -260,12 +241,6 @@ webkit-playsinline
 <button id="startBtn">
 Start AR Experience
 </button>
-
-<!-- TEXT -->
-
-<div class="scanText">
-Interactive Augmented Reality
-</div>
 
 </div>
 
@@ -279,7 +254,7 @@ mindar-image="
 
 imageTargetSrc: targets.mind;
 
-autoStart:true;
+autoStart:false;
 
 uiScanning:false;
 uiLoading:false;
@@ -366,7 +341,8 @@ position="0 0 0"
 
 width="1"
 height="1"
-  material="shader:flat; transparent:true;"
+
+material="shader:flat; transparent:true;"
 
 ></a-video>
 
@@ -398,6 +374,9 @@ document.getElementById("target");
 
 const plane =
 document.getElementById("videoPlane");
+
+const scene =
+document.querySelector("a-scene");
 
 /* =========================
 STATES
@@ -476,10 +455,17 @@ arVideo.pause();
 
 audioReady = true;
 
+/* START CAMERA */
+
+const mindarSystem =
+scene.systems["mindar-image-system"];
+
+await mindarSystem.start();
+
 /* FADE OUT INTRO */
 
 introScreen.style.transition =
-"opacity 1s ease";
+"opacity 0.8s ease";
 
 introScreen.style.opacity = "0";
 
@@ -490,11 +476,15 @@ setTimeout(() => {
 introScreen.style.display =
 "none";
 
-},1000);
+},800);
 
 }catch(err){
 
 console.log(err);
+
+alert(
+"Camera start failed"
+);
 
 }
 
