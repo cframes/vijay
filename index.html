@@ -34,7 +34,7 @@
       display:block;
     }
 
-    #loadingScreen{
+    #loading{
       position:fixed;
       inset:0;
       background:black;
@@ -44,15 +44,15 @@
       align-items:center;
       color:white;
       font-size:18px;
-      transition:opacity .4s ease;
+      transition:opacity .3s ease;
     }
 
-    #loadingScreen.hide{
+    #loading.hide{
       opacity:0;
       pointer-events:none;
     }
 
-    #tapText{
+    #tap{
       position:fixed;
       bottom:25px;
       left:50%;
@@ -65,7 +65,7 @@
       z-index:999;
     }
 
-    #tapText.hide{
+    #tap.hide{
       display:none;
     }
   </style>
@@ -74,12 +74,26 @@
 <body>
 
   <!-- LOADING -->
-  <div id="loadingScreen">Starting AR...</div>
+  <div id="loading">Loading AR...</div>
 
-  <!-- AUDIO MESSAGE -->
-  <div id="tapText">Tap screen to enable audio</div>
+  <!-- AUDIO ENABLE -->
+  <div id="tap">Tap once to enable audio</div>
 
   <a-scene
+
+    embedded
+
+    color-space="sRGB"
+
+    renderer="
+      colorManagement:true;
+      physicallyCorrectLights:false;
+      antialias:true;
+      precision:mediump;
+    "
+
+    vr-mode-ui="enabled:false"
+    device-orientation-permission-ui="enabled:false"
 
     mindar-image="
       imageTargetSrc: targets.mind;
@@ -92,31 +106,16 @@
 
       maxTrack: 1;
 
-      filterMinCF: 0.00001;
-      filterBeta: 0.00001;
+      filterMinCF: 0.001;
+      filterBeta: 0.01;
 
-      missTolerance: 8;
-      warmupTolerance: 5;
+      warmupTolerance: 0;
+      missTolerance: 2;
     "
-
-    embedded
-    color-space="sRGB"
-
-    renderer="
-      physicallyCorrectLights:false;
-      colorManagement:true;
-      precision:mediump;
-      antialias:true;
-      alpha:true;
-      logarithmicDepthBuffer:true;
-    "
-
-    vr-mode-ui="enabled:false"
-    device-orientation-permission-ui="enabled:false"
   >
 
     <!-- ASSETS -->
-    <a-assets timeout="15000">
+    <a-assets timeout="10000">
 
       <video
         id="video"
@@ -170,96 +169,135 @@
 
   <script>
 
-    const video = document.querySelector("#video");
-    const target = document.querySelector("#target");
     const scene = document.querySelector("a-scene");
 
-    const loading = document.querySelector("#loadingScreen");
-    const tapText = document.querySelector("#tapText");
+    const video = document.querySelector("#video");
+
+    const target = document.querySelector("#target");
+
+    const loading = document.querySelector("#loading");
+
+    const tap = document.querySelector("#tap");
 
     let audioEnabled = false;
 
-    // FAST START
+    let trackingStarted = false;
+
+    // REMOVE LOADING
     scene.addEventListener("renderstart", () => {
 
       setTimeout(() => {
+
         loading.classList.add("hide");
+
       }, 300);
 
     });
 
     // ENABLE AUDIO
-    async function enableAudio(){
+    async function unlockAudio(){
 
       if(audioEnabled) return;
 
       audioEnabled = true;
 
       video.muted = false;
-      video.volume = 1;
 
       try{
+
         await video.play();
+
         video.pause();
+
       }catch(e){}
 
-      tapText.classList.add("hide");
+      tap.classList.add("hide");
     }
 
-    document.body.addEventListener("click", enableAudio);
-    document.body.addEventListener("touchstart", enableAudio);
+    document.body.addEventListener("click", unlockAudio);
 
-    // TARGET FOUND
-    target.addEventListener("targetFound", async () => {
+    document.body.addEventListener("touchstart", unlockAudio);
 
-      try{
-
-        if(audioEnabled){
-          video.muted = false;
-        }
-
-        await video.play();
-
-      }catch(e){}
-    });
-
-    // TARGET LOST
-    target.addEventListener("targetLost", () => {
-
-      video.pause();
-
-    });
-
-    // AUTO VIDEO FIT
+    // VIDEO FIT
     video.addEventListener("loadedmetadata", () => {
 
       const plane = document.querySelector("#videoPlane");
 
       const vw = video.videoWidth;
+
       const vh = video.videoHeight;
 
       const ratio = vw / vh;
 
-      // PORTRAIT VIDEO
+      // PORTRAIT
       if(ratio < 1){
 
         plane.setAttribute("width", "1");
+
         plane.setAttribute("height", 1 / ratio);
 
       }
 
-      // LANDSCAPE VIDEO
+      // LANDSCAPE
       else{
 
         plane.setAttribute("width", ratio);
+
         plane.setAttribute("height", "1");
 
       }
 
     });
 
-    // PRELOAD VIDEO
+    // TARGET FOUND
+    target.addEventListener("targetFound", async () => {
+
+      trackingStarted = true;
+
+      try{
+
+        if(audioEnabled){
+
+          video.muted = false;
+
+        }else{
+
+          video.muted = true;
+
+        }
+
+        await video.play();
+
+      }catch(e){}
+
+    });
+
+    // TARGET LOST
+    target.addEventListener("targetLost", () => {
+
+      trackingStarted = false;
+
+      video.pause();
+
+    });
+
+    // FORCE VIDEO READY
     video.load();
+
+    // IOS + ANDROID FIX
+    window.addEventListener("load", async () => {
+
+      try{
+
+        video.muted = true;
+
+        await video.play();
+
+        video.pause();
+
+      }catch(e){}
+
+    });
 
   </script>
 
