@@ -16,7 +16,7 @@ viewport-fit=cover
 "
 />
 
-<title>CFrames AR</title>
+<title>CFrames AR Experience</title>
 
 <!-- AFRAME -->
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
@@ -38,19 +38,16 @@ box-sizing:border-box;
 
 html,
 body{
+
 width:100%;
 height:100%;
+
 overflow:hidden;
-background:transparent;
+
 font-family:Arial,sans-serif;
-}
 
-/* =========================
-AR CAMERA FIX
-========================= */
+background:transparent;
 
-body.a-enter-vr{
-position:fixed !important;
 }
 
 /* =========================
@@ -79,7 +76,9 @@ background:#000;
 
 }
 
-/* BACKGROUND IMAGE */
+/* =========================
+BACKGROUND IMAGE
+========================= */
 
 #introImage{
 
@@ -92,7 +91,9 @@ object-fit:cover;
 
 }
 
-/* OVERLAY */
+/* =========================
+OVERLAY
+========================= */
 
 .overlay{
 
@@ -100,12 +101,12 @@ position:absolute;
 inset:0;
 
 background:
-rgba(0,0,0,0.35);
+rgba(0,0,0,0.30);
 
 }
 
 /* =========================
-BUTTON
+GLASS BUTTON
 ========================= */
 
 #startBtn{
@@ -121,16 +122,18 @@ z-index:10;
 
 padding:18px 42px;
 
-border-radius:24px;
+border:none;
 
-border:
-1px solid rgba(255,255,255,0.25);
+border-radius:24px;
 
 background:
 rgba(255,255,255,0.14);
 
 backdrop-filter:blur(14px);
 -webkit-backdrop-filter:blur(14px);
+
+border:
+1px solid rgba(255,255,255,0.25);
 
 color:#fff;
 
@@ -139,10 +142,20 @@ font-weight:600;
 
 cursor:pointer;
 
+transition:.25s ease;
+
+}
+
+#startBtn:active{
+
+transform:
+translateX(-50%)
+scale(.96);
+
 }
 
 /* =========================
-REAL CAMERA VIEW
+AR CAMERA FIX
 ========================= */
 
 a-scene{
@@ -161,25 +174,31 @@ background:transparent !important;
 
 }
 
-/* IMPORTANT */
-
-.a-canvas{
-background:transparent !important;
-}
-
-canvas{
-background:transparent !important;
-display:block !important;
-}
-
-/* REMOVE UI */
+/* REMOVE DEFAULT UI */
 
 .mindar-ui-overlay{
 display:none !important;
 }
 
+.a-loader-title{
+display:none !important;
+}
+
+.a-enter-vr{
+display:none !important;
+}
+
+canvas{
+display:block !important;
+background:transparent !important;
+}
+
 video{
 max-width:none !important;
+}
+
+.a-video{
+object-fit:cover !important;
 }
 
 </style>
@@ -189,10 +208,12 @@ max-width:none !important;
 <body>
 
 <!-- =========================
-INTRO
+INTRO SCREEN
 ========================= -->
 
 <div id="startScreen">
+
+<!-- BACKGROUND IMAGE -->
 
 <img
 id="introImage"
@@ -200,7 +221,11 @@ src="background.jpg"
 alt="Background"
 />
 
+<!-- OVERLAY -->
+
 <div class="overlay"></div>
+
+<!-- BUTTON -->
 
 <button id="startBtn">
 Start AR Experience
@@ -216,6 +241,8 @@ AR SCENE
 
 embedded
 
+loading-screen="enabled:false"
+
 mindar-image="
 
 imageTargetSrc: targets.mind;
@@ -226,7 +253,7 @@ uiScanning:false;
 uiLoading:false;
 uiError:false;
 
-/* STABLE TRACKING */
+/* SMOOTH TRACKING */
 
 filterMinCF:0.0001;
 filterBeta:0.001;
@@ -239,7 +266,7 @@ missTolerance:12;
 renderer="
 antialias:true;
 alpha:true;
-logarithmicDepthBuffer:true;
+precision:medium;
 "
 
 color-space="sRGB"
@@ -278,7 +305,7 @@ CAMERA
 <a-camera
 position="0 0 0"
 look-controls="enabled:false"
-camera="near: 0.01; far: 10000"
+camera="near:0.01; far:10000"
 ></a-camera>
 
 <!-- =========================
@@ -286,22 +313,30 @@ TARGET
 ========================= -->
 
 <a-entity
+
 id="target"
-mindar-image-target="targetIndex:0"
+
+mindar-image-target="
+targetIndex:0
+"
 
 animation="
 property: position;
-dur: 250;
-easing: easeOutQuad;
+dur:250;
+easing:easeOutQuad;
 "
 
 animation__rotation="
 property: rotation;
-dur: 250;
-easing: easeOutQuad;
+dur:250;
+easing:easeOutQuad;
 "
 
 >
+
+<!-- =========================
+VIDEO
+========================= -->
 
 <a-video
 
@@ -309,10 +344,10 @@ id="videoPlane"
 
 src="#vid"
 
-position="0 0 0"
+position="0 0.02 0"
 
-width="1"
-height="1"
+width="0.82"
+height="1.15"
 
 material="
 shader:flat;
@@ -332,7 +367,9 @@ document.addEventListener(
 "DOMContentLoaded",
 () => {
 
-/* ELEMENTS */
+/* =========================
+ELEMENTS
+========================= */
 
 const startBtn =
 document.getElementById("startBtn");
@@ -345,48 +382,6 @@ document.getElementById("vid");
 
 const target =
 document.getElementById("target");
-
-const plane =
-document.getElementById("videoPlane");
-
-/* =========================
-VIDEO FIT
-========================= */
-
-video.addEventListener(
-"loadedmetadata",
-() => {
-
-const aspect =
-video.videoWidth /
-video.videoHeight;
-
-let width = 1;
-let height = 1;
-
-if(aspect > 1){
-
-height = 1;
-width = aspect;
-
-}else{
-
-width = 1;
-height = 1 / aspect;
-
-}
-
-plane.setAttribute(
-"width",
-width
-);
-
-plane.setAttribute(
-"height",
-height
-);
-
-});
 
 /* =========================
 START BUTTON
@@ -465,4 +460,5 @@ video.currentTime = 0;
 </script>
 
 </body>
+
 </html>
