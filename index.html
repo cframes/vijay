@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0, user-scalable=no"
@@ -14,40 +16,57 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
     }
 
-    body {
-      overflow: hidden;
-      background: black;
-      width: 100vw;
-      height: 100vh;
-      font-family: Arial, sans-serif;
+    body{
+      overflow:hidden;
+      background:black;
+      width:100vw;
+      height:100vh;
+      font-family:Arial,sans-serif;
     }
 
-    canvas {
-      display: block;
+    canvas{
+      display:block;
     }
 
-    #loadingScreen {
-      position: fixed;
-      inset: 0;
-      background: black;
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 18px;
-      transition: opacity 0.5s ease;
+    #loadingScreen{
+      position:fixed;
+      inset:0;
+      background:black;
+      z-index:9999;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      color:white;
+      font-size:18px;
+      transition:opacity .4s ease;
     }
 
-    #loadingScreen.hide {
-      opacity: 0;
-      pointer-events: none;
+    #loadingScreen.hide{
+      opacity:0;
+      pointer-events:none;
+    }
+
+    #tapText{
+      position:fixed;
+      bottom:25px;
+      left:50%;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,.6);
+      color:white;
+      padding:10px 18px;
+      border-radius:12px;
+      font-size:14px;
+      z-index:999;
+    }
+
+    #tapText.hide{
+      display:none;
     }
   </style>
 </head>
@@ -55,46 +74,63 @@
 <body>
 
   <!-- LOADING -->
-  <div id="loadingScreen">Loading AR...</div>
+  <div id="loadingScreen">Starting AR...</div>
+
+  <!-- AUDIO MESSAGE -->
+  <div id="tapText">Tap screen to enable audio</div>
 
   <a-scene
+
     mindar-image="
       imageTargetSrc: targets.mind;
+
       autoStart: true;
+
       uiLoading: no;
       uiScanning: yes;
       uiError: no;
-      filterMinCF: 0.0001;
-      filterBeta: 0.001;
+
+      maxTrack: 1;
+
+      filterMinCF: 0.00001;
+      filterBeta: 0.00001;
+
+      missTolerance: 8;
+      warmupTolerance: 5;
     "
 
     embedded
     color-space="sRGB"
 
     renderer="
-      physicallyCorrectLights: true;
-      colorManagement: true;
-      precision: mediump;
-      antialias: true;
+      physicallyCorrectLights:false;
+      colorManagement:true;
+      precision:mediump;
+      antialias:true;
+      alpha:true;
+      logarithmicDepthBuffer:true;
     "
 
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
+    vr-mode-ui="enabled:false"
+    device-orientation-permission-ui="enabled:false"
   >
 
     <!-- ASSETS -->
-    <a-assets timeout="30000">
+    <a-assets timeout="15000">
 
       <video
         id="video"
+
         src="video.mp4"
+
         preload="auto"
-        autoplay
-        muted
-        loop
+
         crossorigin="anonymous"
+
         playsinline
         webkit-playsinline
+
+        loop
       ></video>
 
     </a-assets>
@@ -102,20 +138,30 @@
     <!-- CAMERA -->
     <a-camera
       position="0 0 0"
-      look-controls="enabled: false"
+      look-controls="enabled:false"
     ></a-camera>
 
     <!-- TARGET -->
-    <a-entity mindar-image-target="targetIndex: 0">
+    <a-entity
+      id="target"
+      mindar-image-target="targetIndex: 0"
+    >
 
       <!-- VIDEO -->
       <a-video
         id="videoPlane"
+
         src="#video"
+
         width="1"
         height="1.5"
+
         position="0 0 0"
-        material="shader: flat;"
+
+        material="
+          shader:flat;
+          transparent:true;
+        "
       ></a-video>
 
     </a-entity>
@@ -123,64 +169,100 @@
   </a-scene>
 
   <script>
-    const video = document.querySelector("#video");
-    const loading = document.querySelector("#loadingScreen");
-    const scene = document.querySelector("a-scene");
-    const target = document.querySelector("[mindar-image-target]");
 
-    // REMOVE WHITE FLASH / LOADING SCREEN
+    const video = document.querySelector("#video");
+    const target = document.querySelector("#target");
+    const scene = document.querySelector("a-scene");
+
+    const loading = document.querySelector("#loadingScreen");
+    const tapText = document.querySelector("#tapText");
+
+    let audioEnabled = false;
+
+    // FAST START
     scene.addEventListener("renderstart", () => {
+
       setTimeout(() => {
         loading.classList.add("hide");
-      }, 500);
+      }, 300);
+
     });
 
-    // MOBILE AUTOPLAY FIX
-    const startVideo = async () => {
-      try {
-        await video.play();
-      } catch (e) {}
-    };
+    // ENABLE AUDIO
+    async function enableAudio(){
 
-    document.body.addEventListener("click", startVideo);
-    document.body.addEventListener("touchstart", startVideo);
+      if(audioEnabled) return;
+
+      audioEnabled = true;
+
+      video.muted = false;
+      video.volume = 1;
+
+      try{
+        await video.play();
+        video.pause();
+      }catch(e){}
+
+      tapText.classList.add("hide");
+    }
+
+    document.body.addEventListener("click", enableAudio);
+    document.body.addEventListener("touchstart", enableAudio);
 
     // TARGET FOUND
     target.addEventListener("targetFound", async () => {
-      try {
+
+      try{
+
+        if(audioEnabled){
+          video.muted = false;
+        }
+
         await video.play();
-      } catch (e) {}
+
+      }catch(e){}
     });
 
     // TARGET LOST
     target.addEventListener("targetLost", () => {
+
       video.pause();
+
     });
 
-    // AUTO FIT VIDEO RATIO
+    // AUTO VIDEO FIT
     video.addEventListener("loadedmetadata", () => {
 
-      const videoPlane = document.querySelector("#videoPlane");
+      const plane = document.querySelector("#videoPlane");
 
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
+      const vw = video.videoWidth;
+      const vh = video.videoHeight;
 
-      const ratio = videoWidth / videoHeight;
+      const ratio = vw / vh;
 
       // PORTRAIT VIDEO
-      if (ratio < 1) {
-        videoPlane.setAttribute("width", "1");
-        videoPlane.setAttribute("height", 1 / ratio);
+      if(ratio < 1){
+
+        plane.setAttribute("width", "1");
+        plane.setAttribute("height", 1 / ratio);
+
       }
 
       // LANDSCAPE VIDEO
-      else {
-        videoPlane.setAttribute("width", ratio);
-        videoPlane.setAttribute("height", "1");
+      else{
+
+        plane.setAttribute("width", ratio);
+        plane.setAttribute("height", "1");
+
       }
+
     });
+
+    // PRELOAD VIDEO
+    video.load();
 
   </script>
 
 </body>
+
 </html>
