@@ -1,306 +1,435 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
+<meta charset="UTF-8" />
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, user-scalable=no"
-  />
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+/>
 
-  <!-- AFRAME -->
-  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<title>Professional Stable AR</title>
 
-  <!-- MINDAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+<!-- AFRAME -->
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-    }
+<!-- MINDAR -->
+<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
 
-    body{
-      overflow:hidden;
-      background:black;
-      width:100vw;
-      height:100vh;
-      font-family:Arial,sans-serif;
-    }
+<style>
 
-    canvas{
-      display:block;
-    }
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
 
-    #loading{
-      position:fixed;
-      inset:0;
-      background:black;
-      z-index:9999;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      color:white;
-      font-size:18px;
-      transition:opacity .3s ease;
-    }
+html,body{
+width:100%;
+height:100%;
+overflow:hidden;
+background:#000;
+font-family:Arial,sans-serif;
+touch-action:none;
+-webkit-user-select:none;
+user-select:none;
+}
 
-    #loading.hide{
-      opacity:0;
-      pointer-events:none;
-    }
+body{
+position:fixed;
+inset:0;
+}
 
-    #tap{
-      position:fixed;
-      bottom:25px;
-      left:50%;
-      transform:translateX(-50%);
-      background:rgba(0,0,0,.6);
-      color:white;
-      padding:10px 18px;
-      border-radius:12px;
-      font-size:14px;
-      z-index:999;
-    }
+canvas{
+display:block;
+image-rendering:auto;
+}
 
-    #tap.hide{
-      display:none;
-    }
-  </style>
+#loading{
+position:fixed;
+inset:0;
+background:#000;
+display:flex;
+justify-content:center;
+align-items:center;
+z-index:9999;
+color:#fff;
+font-size:18px;
+letter-spacing:.5px;
+transition:opacity .3s ease;
+}
+
+#loading.hide{
+opacity:0;
+pointer-events:none;
+}
+
+#tap{
+position:fixed;
+left:50%;
+bottom:25px;
+transform:translateX(-50%);
+padding:12px 18px;
+background:rgba(0,0,0,.72);
+color:#fff;
+font-size:14px;
+border-radius:14px;
+z-index:999;
+backdrop-filter:blur(10px);
+}
+
+#tap.hide{
+display:none;
+}
+
+</style>
 </head>
 
 <body>
 
-  <!-- LOADING -->
-  <div id="loading">Loading AR...</div>
+<div id="loading">Loading AR...</div>
 
-  <!-- AUDIO ENABLE -->
-  <div id="tap">Tap once to enable audio</div>
+<div id="tap">Tap once to enable audio</div>
 
-  <a-scene
+<a-scene
 
-    embedded
+embedded
 
-    color-space="sRGB"
+vr-mode-ui="enabled:false"
 
-    renderer="
-      colorManagement:true;
-      physicallyCorrectLights:false;
-      antialias:true;
-      precision:mediump;
-    "
+device-orientation-permission-ui="enabled:false"
 
-    vr-mode-ui="enabled:false"
-    device-orientation-permission-ui="enabled:false"
+color-space="sRGB"
 
-    mindar-image="
-      imageTargetSrc: targets.mind;
+renderer="
+alpha:true;
+antialias:true;
+precision:mediump;
+colorManagement:true;
+sortObjects:true;
+physicallyCorrectLights:false;
+logarithmicDepthBuffer:true;
+powerPreference:high-performance;
+"
 
-      autoStart: true;
+mindar-image="
+imageTargetSrc: targets.mind;
 
-      uiLoading: no;
-      uiScanning: yes;
-      uiError: no;
+autoStart: true;
 
-      maxTrack: 1;
+uiLoading: no;
+uiScanning: yes;
+uiError: no;
 
-      filterMinCF: 0.001;
-      filterBeta: 0.01;
+maxTrack: 1;
 
-      warmupTolerance: 0;
-      missTolerance: 2;
-    "
-  >
+filterMinCF: 0.001;
+filterBeta: 0.01;
 
-    <!-- ASSETS -->
-    <a-assets timeout="10000">
+warmupTolerance: 5;
+missTolerance: 3;
+"
 
-      <video
-        id="video"
+>
 
-        src="video.mp4"
+<a-assets timeout="20000">
 
-        preload="auto"
+<video
+id="video"
 
-        crossorigin="anonymous"
+src="video.mp4"
 
-        playsinline
-        webkit-playsinline
+preload="auto"
 
-        loop
-      ></video>
+crossorigin="anonymous"
 
-    </a-assets>
+loop
 
-    <!-- CAMERA -->
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled:false"
-    ></a-camera>
+playsinline
+webkit-playsinline
 
-    <!-- TARGET -->
-    <a-entity
-      id="target"
-      mindar-image-target="targetIndex: 0"
-    >
+muted
 
-      <!-- VIDEO -->
-      <a-video
-        id="videoPlane"
+></video>
 
-        src="#video"
+</a-assets>
 
-        width="1"
-        height="1.5"
+<a-camera
+position="0 0 0"
+look-controls="enabled:false"
+></a-camera>
 
-        position="0 0 0"
+<a-entity
+id="target"
+mindar-image-target="targetIndex:0"
+>
 
-        material="
-          shader:flat;
-          transparent:true;
-        "
-      ></a-video>
+<a-video
+id="videoPlane"
 
-    </a-entity>
+src="#video"
 
-  </a-scene>
+position="0 0 0"
 
-  <script>
+width="1"
+height="1.5"
 
-    const scene = document.querySelector("a-scene");
+material="
+shader:flat;
+transparent:true;
+depthTest:false;
+depthWrite:false;
+toneMapped:false;
+"
+></a-video>
 
-    const video = document.querySelector("#video");
+</a-entity>
 
-    const target = document.querySelector("#target");
+</a-scene>
 
-    const loading = document.querySelector("#loading");
+<script>
 
-    const tap = document.querySelector("#tap");
+const scene = document.querySelector("a-scene");
 
-    let audioEnabled = false;
+const video = document.querySelector("#video");
 
-    let trackingStarted = false;
+const target = document.querySelector("#target");
 
-    // REMOVE LOADING
-    scene.addEventListener("renderstart", () => {
+const videoPlane = document.querySelector("#videoPlane");
 
-      setTimeout(() => {
+const loading = document.querySelector("#loading");
 
-        loading.classList.add("hide");
+const tapUI = document.querySelector("#tap");
 
-      }, 300);
+let tracking = false;
 
-    });
+let audioUnlocked = false;
 
-    // ENABLE AUDIO
-    async function unlockAudio(){
+let lostTimeout = null;
 
-      if(audioEnabled) return;
 
-      audioEnabled = true;
 
-      video.muted = false;
+// LOADING REMOVE
 
-      try{
+scene.addEventListener("renderstart", ()=>{
 
-        await video.play();
+setTimeout(()=>{
 
-        video.pause();
+loading.classList.add("hide");
 
-      }catch(e){}
+},300);
 
-      tap.classList.add("hide");
-    }
+});
 
-    document.body.addEventListener("click", unlockAudio);
 
-    document.body.addEventListener("touchstart", unlockAudio);
 
-    // VIDEO FIT
-    video.addEventListener("loadedmetadata", () => {
+// VIDEO FIT
 
-      const plane = document.querySelector("#videoPlane");
+video.addEventListener("loadedmetadata", ()=>{
 
-      const vw = video.videoWidth;
+const vw = video.videoWidth;
 
-      const vh = video.videoHeight;
+const vh = video.videoHeight;
 
-      const ratio = vw / vh;
+const ratio = vw / vh;
 
-      // PORTRAIT
-      if(ratio < 1){
+if(ratio > 1){
 
-        plane.setAttribute("width", "1");
+videoPlane.setAttribute("width", ratio);
 
-        plane.setAttribute("height", 1 / ratio);
+videoPlane.setAttribute("height", 1);
 
-      }
+}else{
 
-      // LANDSCAPE
-      else{
+videoPlane.setAttribute("width", 1);
 
-        plane.setAttribute("width", ratio);
+videoPlane.setAttribute("height", 1 / ratio);
 
-        plane.setAttribute("height", "1");
+}
 
-      }
+});
 
-    });
 
-    // TARGET FOUND
-    target.addEventListener("targetFound", async () => {
 
-      trackingStarted = true;
+// PRELOAD VIDEO
 
-      try{
+async function preloadVideo(){
 
-        if(audioEnabled){
+try{
 
-          video.muted = false;
+video.muted = true;
 
-        }else{
+await video.play();
 
-          video.muted = true;
+video.pause();
 
-        }
+video.currentTime = 0;
 
-        await video.play();
+}catch(e){}
 
-      }catch(e){}
+}
 
-    });
+window.addEventListener("load", preloadVideo);
 
-    // TARGET LOST
-    target.addEventListener("targetLost", () => {
 
-      trackingStarted = false;
 
-      video.pause();
+// AUDIO UNLOCK
 
-    });
+async function unlockAudio(){
 
-    // FORCE VIDEO READY
-    video.load();
+if(audioUnlocked) return;
 
-    // IOS + ANDROID FIX
-    window.addEventListener("load", async () => {
+audioUnlocked = true;
 
-      try{
+try{
 
-        video.muted = true;
+video.muted = false;
 
-        await video.play();
+await video.play();
 
-        video.pause();
+video.pause();
 
-      }catch(e){}
+video.currentTime = 0;
 
-    });
+}catch(e){}
 
-  </script>
+tapUI.classList.add("hide");
+
+}
+
+document.body.addEventListener(
+"click",
+unlockAudio,
+{ once:true }
+);
+
+document.body.addEventListener(
+"touchstart",
+unlockAudio,
+{ once:true }
+);
+
+
+
+// TARGET FOUND
+
+target.addEventListener("targetFound", async ()=>{
+
+clearTimeout(lostTimeout);
+
+if(tracking) return;
+
+tracking = true;
+
+try{
+
+if(audioUnlocked){
+
+video.muted = false;
+
+}else{
+
+video.muted = true;
+
+}
+
+video.currentTime = 0;
+
+await video.play();
+
+}catch(e){}
+
+});
+
+
+
+// TARGET LOST
+
+target.addEventListener("targetLost", ()=>{
+
+lostTimeout = setTimeout(()=>{
+
+tracking = false;
+
+video.pause();
+
+},120);
+
+});
+
+
+
+// PAGE VISIBILITY
+
+document.addEventListener("visibilitychange", ()=>{
+
+if(document.hidden){
+
+video.pause();
+
+}else{
+
+if(tracking){
+
+video.play();
+
+}
+
+}
+
+});
+
+
+
+// IOS FIX
+
+video.setAttribute("playsinline", "");
+
+video.setAttribute("webkit-playsinline", "");
+
+
+
+// FORCE VIDEO TEXTURE UPDATE
+
+AFRAME.registerComponent("video-updater", {
+
+tick: function(){
+
+if(video.readyState >= 2){
+
+const mesh = this.el.getObject3D("mesh");
+
+if(mesh){
+
+mesh.material.map.needsUpdate = true;
+
+}
+
+}
+
+}
+
+});
+
+videoPlane.setAttribute("video-updater","");
+
+
+
+// PERFORMANCE OPTIMIZATION
+
+AFRAME.registerComponent("visibility-handler", {
+
+tick:function(){
+
+this.el.object3D.visible = tracking;
+
+}
+
+});
+
+videoPlane.setAttribute("visibility-handler","");
+
+</script>
 
 </body>
-
 </html>
